@@ -15,7 +15,7 @@ python main.py
 ```
 浏览器打开[localhost:9040](http://localhost:9040)即可
 
-![](demo.png)
+![](screenshot.png)
 ## Contributing
 
 PRs accepted.
