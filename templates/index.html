@@ -1,0 +1,106 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="static/xterm.css" />
+        <link rel="stylesheet" href="static/bootstrap.min.css" />
+        <script src="static/xterm.js"></script>
+        <script src="static/jquery.min.js"></script>
+        <script src="static/bootstrap.min.js"></script>
+        <style>
+            body {
+                color: #111;
+                margin: 20px;
+            }
+
+            #terminal-container {
+                margin: 0 auto;
+            }
+            #connect {
+                margin: 0 auto;
+            }
+            #terminal-container a {
+                color: #fff;
+            }
+            .panel-body{
+                background-color: #000;
+            }
+        </style>
+    </head>
+    <body>
+
+        <form class="form-inline">
+            <div class="form-group">
+                <label for="">IP</label>
+                <input type="text" class="form-control" name="h" placeholder="118.25.52.233" value="118.25.52.233">
+            </div>
+            <div class="form-group">
+                <label for="">端口</label>
+                <input type="text" class="form-control" name="p" placeholder="22" value="22">
+            </div>
+            <div class="form-group">
+                <label for="">用户</label>
+                <input type="text" class="form-control" name="u" placeholder="" value="">
+            </div>
+            <div class="form-group">
+                <label for="">密码</label>
+                <input type="password" class="form-control" name="passwd" placeholder="" value="">
+            </div>
+            <button type="button" class="btn btn-default" onclick="ws_connect()" id="connect_container">连接</button>
+            <button type="button" class="btn btn-default" onclick="ws_close()" id="drop_container" style="display:none">断开</button>
+        </form>
+        <div class="panel panel-default">
+            <div class="panel-heading"></div>
+            <div class="panel-body">
+                <div id="terminal-container"></div>
+            </div>
+        </div>
+        <script>
+            //获取主机 端口
+            hostname=location.hostname
+            port=location.port
+            var socket;
+
+            function ws_connect(){
+                var term = new Terminal({
+                    "cursorBlink":true,
+                    "rows":40
+                })
+                h=$("input[name=h]").val()
+                p=$("input[name=p]").val()
+                u=$("input[name=u]").val()
+                passwd=$("input[name=passwd]").val()
+                    $("#connect_container").hide()
+                    $("#drop_container").show()
+                    url = 'ws://'+hostname+':'+port+'/ws?h='+h+'&p='+p+'&u='+u+'&passwd='+passwd
+                    socket = new WebSocket(url);
+                    $("#terminal-container").html("")
+                    term.open(document.getElementById('terminal-container'));
+                    term.focus();
+                    term.on('data', function (data) {
+                        socket.send(data);
+                    });
+
+                    socket.onmessage = function (e) {
+                        obj=JSON.parse(e.data);
+                        if(obj.data=="auth failed"){
+                            alert("auth failed")
+                            socket.close();
+                        }
+                        term.write(obj.data);
+                    }
+                    socket.onclose = function (e) {
+                        term.clear();
+                        term.write("  bye bye");
+                        $("#connect_container").show()
+                        $("#drop_container").hide()
+                        term.dispose();
+                    }
+
+            }
+            function ws_close(){
+                socket.close()
+                $("#connect_container").show()
+                $("#drop_container").hide()
+            }
+        </script>
+    </body>
+</html>
